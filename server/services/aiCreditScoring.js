@@ -1,4 +1,4 @@
-const tf = require('@tensorflow/tfjs-node');
+// const tf = require('@tensorflow/tfjs-node');
 const { Matrix } = require('ml-matrix');
 const { aiLogger } = require('../utils/logger');
 
@@ -25,35 +25,9 @@ class AICreditscoringEngine {
 
   async initializeModel() {
     try {
-      // In a real implementation, you would load a pre-trained model
-      // For demo purposes, we'll create a simple neural network
-      this.model = tf.sequential({
-        layers: [
-          tf.layers.dense({ 
-            inputShape: [this.featureNames.length], 
-            units: 64, 
-            activation: 'relu',
-            kernelInitializer: 'glorotUniform'
-          }),
-          tf.layers.dropout({ rate: 0.2 }),
-          tf.layers.dense({ units: 32, activation: 'relu' }),
-          tf.layers.dropout({ rate: 0.1 }),
-          tf.layers.dense({ units: 16, activation: 'relu' }),
-          tf.layers.dense({ units: 1, activation: 'sigmoid' })
-        ]
-      });
-
-      this.model.compile({
-        optimizer: tf.train.adam(0.001),
-        loss: 'binaryCrossentropy',
-        metrics: ['accuracy']
-      });
-
-      // Initialize with synthetic weights for demo
-      await this.trainInitialModel();
-      
+      // Simulate model initialization for demo purposes
       this.isModelLoaded = true;
-      aiLogger.info('AI Credit Scoring Model initialized successfully');
+      aiLogger.info('AI Credit Scoring Engine initialized successfully (Demo Mode)');
       
     } catch (error) {
       aiLogger.error('Failed to initialize AI model:', error);
@@ -62,62 +36,9 @@ class AICreditscoringEngine {
   }
 
   async trainInitialModel() {
-    // Generate synthetic training data for demo purposes
-    const numSamples = 1000;
-    const features = [];
-    const labels = [];
-
-    for (let i = 0; i < numSamples; i++) {
-      const creditScore = Math.random() * 400 + 400; // 400-800
-      const income = Math.random() * 150000 + 25000; // 25k-175k
-      const debtToIncome = Math.random() * 0.5; // 0-50%
-      const employmentLength = Math.random() * 20; // 0-20 years
-      const loanAmount = Math.random() * 500000 + 5000; // 5k-505k
-      const loanTerm = Math.random() * 30 + 1; // 1-30 years
-      const paymentHistory = Math.random() * 100; // 0-100
-      const creditUtilization = Math.random() * 0.9; // 0-90%
-      const numberOfAccounts = Math.random() * 20 + 1; // 1-20
-      const recentInquiries = Math.random() * 10; // 0-10
-      const collateralValue = Math.random() * 1000000; // 0-1M
-      const loanPurpose = Math.random() * 10; // 0-10
-
-      features.push([
-        creditScore / 800, // Normalize
-        income / 200000,
-        debtToIncome,
-        employmentLength / 20,
-        loanAmount / 500000,
-        loanTerm / 30,
-        paymentHistory / 100,
-        creditUtilization,
-        numberOfAccounts / 20,
-        recentInquiries / 10,
-        collateralValue / 1000000,
-        loanPurpose / 10
-      ]);
-
-      // Simple scoring logic for synthetic data
-      const score = (creditScore / 800) * 0.3 + 
-                   (income / 200000) * 0.2 + 
-                   (1 - debtToIncome) * 0.2 + 
-                   (paymentHistory / 100) * 0.15 + 
-                   (1 - creditUtilization) * 0.15;
-      
-      labels.push([score > 0.6 ? 1 : 0]);
-    }
-
-    const xs = tf.tensor2d(features);
-    const ys = tf.tensor2d(labels);
-
-    await this.model.fit(xs, ys, {
-      epochs: 50,
-      batchSize: 32,
-      validationSplit: 0.2,
-      verbose: 0
-    });
-
-    xs.dispose();
-    ys.dispose();
+    // Simulate training for demo purposes
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    aiLogger.info('Model training simulation completed');
   }
 
   preprocessFeatures(applicantData) {
@@ -155,6 +76,24 @@ class AICreditscoringEngine {
     return purposeScores[purpose] || 5;
   }
 
+  calculateCreditScoreDemo(features) {
+    // Simulate neural network with weighted calculation
+    const weights = [0.30, 0.20, -0.20, 0.10, -0.05, 0.05, 0.15, -0.15, 0.05, -0.10, 0.10, 0.15];
+    
+    let score = 0;
+    for (let i = 0; i < features.length; i++) {
+      score += features[i] * weights[i];
+    }
+    
+    // Apply sigmoid activation function simulation
+    score = 1 / (1 + Math.exp(-score * 2));
+    
+    // Add some randomness to simulate real ML uncertainty
+    score += (Math.random() - 0.5) * 0.1;
+    
+    return Math.max(0, Math.min(1, score));
+  }
+
   async predictCreditScore(applicantData) {
     if (!this.isModelLoaded) {
       throw new Error('AI model not loaded. Please initialize first.');
@@ -162,29 +101,25 @@ class AICreditscoringEngine {
 
     try {
       const features = this.preprocessFeatures(applicantData);
-      const prediction = tf.tidy(() => {
-        const inputTensor = tf.tensor2d([features]);
-        return this.model.predict(inputTensor);
-      });
+      
+      // Simulate ML prediction with mathematical model for demo
+      const score = this.calculateCreditScoreDemo(features);
 
-      const score = await prediction.data();
-      prediction.dispose();
-
-      const creditScore = Math.round(score[0] * 850 + 300); // Scale to 300-850
+      const creditScore = Math.round(score * 550 + 300); // Scale to 300-850
       const riskLevel = this.calculateRiskLevel(creditScore);
       const recommendations = this.generateRecommendations(applicantData, creditScore);
 
       const result = {
         creditScore,
         riskLevel,
-        probability: score[0],
+        probability: score,
         recommendations,
         factors: this.analyzeFactors(applicantData, features),
         timestamp: new Date().toISOString(),
-        modelVersion: '1.0.0'
+        modelVersion: '1.0.0-demo'
       };
 
-      aiLogger.info('Credit score prediction generated', {
+      aiLogger.info('Credit score prediction generated (Demo Mode)', {
         applicantId: applicantData.id,
         creditScore,
         riskLevel
@@ -288,9 +223,9 @@ class AICreditscoringEngine {
 
   async dispose() {
     if (this.model) {
-      this.model.dispose();
+      // In real implementation: this.model.dispose();
       this.isModelLoaded = false;
-      aiLogger.info('AI model disposed');
+      aiLogger.info('AI model disposed (Demo Mode)');
     }
   }
 }
